@@ -3,262 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日本追猴溫泉之旅清單 🇯🇵 🐵</title>
+    <title>北陸追猴溫泉之旅 🐵♨️</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #ff6b6b; /* 日本鳥居紅 */
-            --bg: #f7f9fc;
+            --primary: #2b5876;  /* 深藍色，適合冬日 */
+            --accent: #ff6b6b;   /* 重點色 */
+            --bg: #f4f7f6;
             --card: #ffffff;
-            --text: #333;
+            --line: #dbe4eb;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
+            background: var(--bg);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 80px; /* 避開底部導航 */
         }
-        h1 { text-align: center; font-size: 1.5rem; margin-bottom: 1rem; }
-        .progress-container {
-            background: #e0e0e0;
-            border-radius: 10px;
-            height: 10px;
-            margin-bottom: 20px;
-            overflow: hidden;
+        
+        /* 頂部 Header */
+        header {
+            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .progress-bar {
-            height: 100%;
-            background: var(--primary);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        .category {
-            margin-bottom: 20px;
-            background: var(--card);
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .category h2 {
-            margin-top: 0;
-            font-size: 1.1rem;
-            color: var(--primary);
-            border-bottom: 2px solid #eee;
-            padding-bottom: 8px;
-        }
-        .item {
+        h1 { margin: 0; font-size: 1.6rem; }
+        .subtitle { font-size: 0.9rem; opacity: 0.9; margin-top: 5px; }
+
+        /* 日期選擇器 (Tab) */
+        .day-nav {
             display: flex;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .item:last-child { border-bottom: none; }
-        input[type="checkbox"] {
-            transform: scale(1.3);
-            margin-right: 12px;
-            cursor: pointer;
-        }
-        label { flex-grow: 1; cursor: pointer; transition: color 0.2s; }
-        input:checked + label {
-            text-decoration: line-through;
-            color: #aaa;
-        }
-        .add-box {
-            display: flex;
+            overflow-x: auto;
+            padding: 15px 10px;
             gap: 10px;
-            margin-bottom: 20px;
+            background: var(--bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            -webkit-overflow-scrolling: touch; /* 讓手機滾動順暢 */
         }
-        input[type="text"] {
-            flex-grow: 1;
-            padding: 10px;
+        .day-chip {
+            flex: 0 0 auto;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #666;
             border: 1px solid #ddd;
-            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
-        button {
+        .day-chip.active {
             background: var(--primary);
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(43, 88, 118, 0.3);
+        }
+
+        /* 每日資訊卡 (天氣) */
+        .daily-info {
+            margin: 15px 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .weather-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-weight: bold;
+            color: #555;
         }
-        .reset-btn {
-            background: #999;
-            width: 100%;
-            margin-top: 20px;
+
+        /* 時間軸容器 */
+        .timeline {
+            position: relative;
+            padding: 0 20px;
         }
+        /* 垂直線 */
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 40px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--line);
+        }
+
+        /* 時間軸項目 */
+        .event {
+            position: relative;
+            margin-bottom: 25px;
+            padding-left: 40px;
+        }
+        
+        /* 時間點點 */
+        .dot {
+            position: absolute;
+            left: 13px; /* 調整圓點位置以對齊線條 */
+            top: 15px;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            z-index: 2;
+        }
+        .event.transport .dot { border-color: #fca311; } /* 交通是橘色 */
+        .event.food .dot { border-color: #ff6b6b; } /* 吃飯是紅色 */
+
+        .time {
+            position: absolute;
+            left: -10px;
+            top: 13px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #888;
+            width: 45px;
+            text-align: right;
+            display: none; /* 手機版空間不足先隱藏，改放在卡片內 */
+        }
+
+        /* 內容卡片 */
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .card:active { transform: scale(0.98); }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .card-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .card-time {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            background: #eef4f8;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .card-desc {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+        .tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .tag {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #eee;
+            color: #666;
+        }
+        .tag.jr { background: #e6fffa; color: #00a88d; border: 1px solid #b2f5ea; }
+
+        /* 地圖按鈕 */
+        .map-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: var(--primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 5px;
+            padding: 5px 0;
+        }
+        .map-btn:hover { text-decoration: underline; }
+
     </style>
 </head>
 <body>
 
-    <h1>🇯🇵 2025 冬季北陸追猴之旅</h1>
-    
-    <div class="progress-container">
-        <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <p style="text-align: center; font-size: 0.9rem; color: #666;">打包進度: <span id="progressText">0%</span></p>
+    <header>
+        <h1>🇯🇵 北陸冬日之旅</h1>
+        <div class="subtitle">2025.12.13 - 12.20 | 8 天 7 夜</div>
+    </header>
 
-    <div class="add-box">
-        <input type="text" id="newItemInput" placeholder="輸入想帶的物品...">
-        <button onclick="addNewItem()">新增</button>
-    </div>
-
-    <div id="listContainer">
+    <div class="day-nav" id="dayNav">
         </div>
 
-    <button class="reset-btn" onclick="resetList()">重置所有清單</button>
+    <div class="daily-info">
+        <div>
+            <div style="font-size: 1.2rem; font-weight: bold;" id="currentCity">名古屋</div>
+            <div style="font-size: 0.85rem; color: #888;" id="currentDate">12月13日 (六)</div>
+        </div>
+        <div class="weather-badge">
+            <i class="fas fa-snowflake" style="color: #a2d2ff;"></i>
+            <span id="currentWeather">2°C 下雪機率高</span>
+        </div>
+    </div>
+
+    <div class="timeline" id="timelineContainer">
+        </div>
 
     <script>
-        // 預設清單資料：根據您的行程檔案客製化
-        const defaultData = [
+        // --- 您的行程資料 (Data) ---
+        // 資料來源：您上傳的 PDF 行程
+        const tripData = [
             {
-                category: "🎒 隨身/重要證件",
-                items: [
-                    "護照 (有效期6個月以上)",
-                    "JR 北陸拱型周遊券 (兌換券/憑證)", 
-                    "現金 (日幣)",
-                    "信用卡 (海外回饋高)",
-                    "Visit Japan Web QR Code 截圖",
-                    "原子筆 (填寫入境卡用)"
+                day: 1,
+                date: "12/13 (六)",
+                city: "名古屋",
+                weather: "8°C 晴時多雲",
+                events: [
+                    { time: "08:45", title: "起飛 ✈️", desc: "台灣虎航 IT206 (TPE -> NGO)", type: "transport" },
+                    { time: "12:25", title: "抵達名古屋機場", desc: "入境、領行李", type: "transport" },
+                    { time: "14:00", title: "前往市區", desc: "搭乘名鐵特急 (μSKY) 前往名鐵名古屋站 (需購票)", type: "transport", map: "名鐵名古屋站" },
+                    { time: "15:30", title: "Check-in", desc: "Prince Smart Inn 名古屋榮", map: "Prince Smart Inn Nagoya Sakae" },
+                    { time: "16:30", title: "熱田神宮", desc: "參拜日本三大神宮之一", map: "熱田神宮" },
+                    { time: "17:30", title: "晚餐：蓬萊軒", desc: "必吃鰻魚飯 (本店)，記得有預約", type: "food", map: "あつた蓬莱軒 本店" },
+                    { time: "20:00", title: "榮商圈散策", desc: "外帶 HARBS 蛋糕", type: "food", map: "HARBS 本店" }
                 ]
             },
             {
-                category: "❄️ 冬季衣物 (12月北陸/長野)",
-                items: [
-                    "防風防水外套 (Gore-tex佳)",
-                    "發熱衣 x 3",
-                    "防滑靴/防水鞋 (野猿公苑步道有雪)",
-                    "羊毛襪/厚襪",
-                    "圍巾/脖圍",
-                    "觸控手套 (拍照不用脫)",
-                    "毛帽 (遮耳)"
+                day: 2,
+                date: "12/14 (日)",
+                city: "金澤",
+                weather: "4°C 陰雨/雪",
+                events: [
+                    { time: "09:30", title: "移動：名古屋 -> 金澤", desc: "JR白鷺號 -> 敦賀轉新幹線 -> 金澤", type: "transport", tags: ["JR Pass啟用"] },
+                    { time: "12:00", title: "午餐：近江町市場", desc: "もりもり壽司 或 IPUKU橫丁", type: "food", map: "近江町市場" },
+                    { time: "14:00", title: "海未來圖書館", desc: "絕美建築打卡", map: "金澤海未來圖書館" },
+                    { time: "16:00", title: "21世紀美術館", desc: "兼六園也在附近，若有時間可去 KAMU", map: "金澤21世紀美術館" },
+                    { time: "18:30", title: "晚餐：Godburger", desc: "傳說中的神之漢堡", type: "food", map: "The Godburger" },
+                    { time: "20:00", title: "入住：SOKI 金澤", desc: "質感旅宿", map: "SOKI KANAZAWA" }
                 ]
             },
             {
-                category: "🔌 電子/3C",
-                items: [
-                    "網卡/eSIM (開通確認)",
-                    "行動電源 (低溫耗電快，建議帶兩顆)",
-                    "手機充電線/頭",
-                    "相機/GoPro",
-                    "轉接頭 (日本兩孔扁插)"
+                day: 3,
+                date: "12/15 (一)",
+                city: "富山/高岡",
+                weather: "3°C 降雪",
+                events: [
+                    { time: "09:00", title: "移動：金澤 -> 高岡", desc: "北陸新幹線至新高岡，轉車至高岡", type: "transport" },
+                    { time: "10:30", title: "哆啦A夢散步道", desc: "高岡是作者故鄉，必拍哆啦A夢郵筒", map: "高岡駅" },
+                    { time: "12:30", title: "移動：高岡 -> 冰見", desc: "JR冰見線 (雨晴海岸景色)", type: "transport" },
+                    { time: "13:30", title: "午餐：冰見漁港", desc: "冰見番屋街，吃寒鰤魚", type: "food", map: "氷見漁港場外市場 ひみ番屋街" },
+                    { time: "16:00", title: "移動：冰見 -> 富山", desc: "經高岡轉富山鐵道", type: "transport" },
+                    { time: "17:30", title: "富山環水公園", desc: "世界最美星巴克", map: "星巴克 富山環水公園店" },
+                    { time: "19:00", title: "晚餐：富山黑拉麵", desc: "或 白蝦亭", type: "food" },
+                    { time: "20:30", title: "入住：日航都市飯店", desc: "Hotel JAL City Toyama", map: "Hotel JAL City Toyama" }
                 ]
             },
             {
-                category: "💊 藥妝/雜物",
-                items: [
-                    "常備藥 (感冒/止痛/腸胃)",
-                    "護唇膏/護手霜 (日本極乾)",
-                    "暖暖包 (貼式/握式)",
-                    "摺疊傘 (金澤號稱'連便當忘記都不能忘記傘')",
-                    "壓縮袋 (節省空間)"
+                day: 4,
+                date: "12/16 (二)",
+                city: "長野 (雪猴)",
+                weather: "-2°C 大雪",
+                events: [
+                    { time: "09:00", title: "移動：富山 -> 長野", desc: "北陸新幹線 (約1小時)", type: "transport" },
+                    { time: "10:30", title: "前往地獄谷", desc: "長野站東口搭急行巴士 (Snow Monkey Pass)", type: "transport" },
+                    { time: "12:00", title: "地獄谷野猿公苑", desc: "徒步30分進山，看猴子泡溫泉", map: "地獄谷野猿公苑" },
+                    { time: "15:00", title: "猿座 Cafe", desc: "下山後吃個點心", type: "food" },
+                    { time: "17:00", title: "返回長野市區", desc: "巴士回長野站", type: "transport" },
+                    { time: "19:00", title: "入住：長野相鐵", desc: "Sotetsu Fresa Inn", map: "Sotetsu Fresa Inn Nagano Zenkojiguchi" }
+                ]
+            },
+            {
+                day: 5,
+                date: "12/17 (三)",
+                city: "長野 (戶隱)",
+                weather: "-3°C 積雪",
+                events: [
+                    { time: "09:00", title: "前往戶隱神社", desc: "長野站搭巴士 (約1小時)", type: "transport" },
+                    { time: "10:30", title: "戶隱神社奧社", desc: "參拜，絕美杉木林參道 (雪地路滑小心)", map: "戶隱神社奧社" },
+                    { time: "13:00", title: "午餐：戶隱蕎麥麵", desc: "當地名產", type: "food", map: "うずら家" },
+                    { time: "15:00", title: "戶隱中社/鏡池", desc: "視體力與巴士時間決定", map: "戶隱神社中社" },
+                    { time: "17:00", title: "返回長野市區", desc: "晚餐在長野站周邊解決", type: "food" }
+                ]
+            },
+             {
+                day: 6,
+                date: "12/18 (四)",
+                city: "東京",
+                weather: "9°C 晴天",
+                events: [
+                    { time: "09:30", title: "移動：長野 -> 東京", desc: "北陸新幹線 (約1.5小時)", type: "transport" },
+                    { time: "12:00", title: "Check-in/寄放", desc: "品川海濱羅伊斯酒店 (Loisir Hotel)", map: "Loisir Hotel Shinagawa Seaside" },
+                    { time: "14:00", title: "六本木", desc: "EVA 展覽？國立新美術館？", map: "六本木新城" },
+                    { time: "17:00", title: "下北澤", desc: "古著、咖哩、逛街", map: "下北澤" },
+                    { time: "20:00", title: "晚餐", desc: "下北澤湯咖哩", type: "food" }
+                ]
+            },
+            {
+                day: 7,
+                date: "12/19 (五)",
+                city: "東京",
+                weather: "10°C 晴天",
+                events: [
+                    { time: "All Day", title: "東京自由活動", desc: "逛街、採買伴手禮", type: "transport" },
+                    { time: "Hint", title: "備註", desc: "可以使用 JR Pass 搭乘山手線" }
+                ]
+            },
+            {
+                day: 8,
+                date: "12/20 (六)",
+                city: "返程",
+                weather: "10°C 晴",
+                events: [
+                    { time: "12:00", title: "前往機場", desc: "搭乘 N'EX 成田特快 (東京站 -> 成田)", type: "transport" },
+                    { time: "13:30", title: "抵達機場", desc: "成田機場 T2 (CX451)", map: "成田國際機場 第2航廈" },
+                    { time: "15:20", title: "起飛 ✈️", desc: "國泰航空 CX451 (NRT -> TPE)", type: "transport" },
+                    { time: "18:40", title: "抵達台北", desc: "溫暖的家" }
                 ]
             }
         ];
 
-        let appData = JSON.parse(localStorage.getItem('japanPackingList')) || defaultData;
+        // --- 程式邏輯 (Logic) ---
+        let currentDayIdx = 0;
 
-        function renderList() {
-            const container = document.getElementById('listContainer');
-            container.innerHTML = '';
-            let total = 0;
-            let checkedCount = 0;
+        function init() {
+            renderDayNav();
+            renderTimeline(0);
+        }
 
-            appData.forEach((cat, catIndex) => {
-                const catDiv = document.createElement('div');
-                catDiv.className = 'category';
-                
-                const title = document.createElement('h2');
-                title.textContent = cat.category;
-                catDiv.appendChild(title);
-
-                cat.items.forEach((item, itemIndex) => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'item';
-                    
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = `item-${catIndex}-${itemIndex}`;
-                    
-                    // 檢查是否是物件格式（新版）還是純字串（舊版相容）
-                    const isChecked = typeof item === 'object' ? item.checked : false;
-                    const itemText = typeof item === 'object' ? item.name : item;
-
-                    checkbox.checked = isChecked;
-                    checkbox.onchange = () => toggleCheck(catIndex, itemIndex);
-
-                    const label = document.createElement('label');
-                    label.htmlFor = `item-${catIndex}-${itemIndex}`;
-                    label.textContent = itemText;
-
-                    itemDiv.appendChild(checkbox);
-                    itemDiv.appendChild(label);
-                    catDiv.appendChild(itemDiv);
-
-                    total++;
-                    if(isChecked) checkedCount++;
-                });
-
-                container.appendChild(catDiv);
+        function renderDayNav() {
+            const nav = document.getElementById('dayNav');
+            nav.innerHTML = '';
+            tripData.forEach((day, idx) => {
+                const btn = document.createElement('div');
+                btn.className = `day-chip ${idx === 0 ? 'active' : ''}`;
+                // 只顯示 D1, D2 或 日期
+                btn.textContent = `D${day.day} ${day.date.split(' ')[0]}`;
+                btn.onclick = () => {
+                    document.querySelectorAll('.day-chip').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderTimeline(idx);
+                };
+                nav.appendChild(btn);
             });
-
-            updateProgress(checkedCount, total);
         }
 
-        function toggleCheck(catIndex, itemIndex) {
-            const item = appData[catIndex].items[itemIndex];
-            if (typeof item === 'string') {
-                appData[catIndex].items[itemIndex] = { name: item, checked: true };
-            } else {
-                appData[catIndex].items[itemIndex].checked = !item.checked;
-            }
-            saveAndRender();
-        }
-
-        function addNewItem() {
-            const input = document.getElementById('newItemInput');
-            const val = input.value.trim();
-            if (!val) return;
-
-            // 預設加到第一個類別，或您可以新增一個「其他」類別
-            if(typeof appData[0].items[0] === 'string') {
-                 // 簡單轉換舊資料格式以免報錯
-                 appData.forEach(c => c.items = c.items.map(i => ({name: i, checked: false})));
-            }
+        function renderTimeline(idx) {
+            const data = tripData[idx];
             
-            appData[0].items.push({ name: val, checked: false });
-            input.value = '';
-            saveAndRender();
-        }
+            // 更新頂部資訊
+            document.getElementById('currentCity').textContent = data.city;
+            document.getElementById('currentDate').textContent = data.date;
+            document.getElementById('currentWeather').textContent = data.weather;
 
-        function updateProgress(checked, total) {
-            const percent = total === 0 ? 0 : Math.round((checked / total) * 100);
-            document.getElementById('progressBar').style.width = percent + '%';
-            document.getElementById('progressText').textContent = `${percent}% (${checked}/${total})`;
-        }
+            // 更新時間軸
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = '';
 
-        function saveAndRender() {
-            localStorage.setItem('japanPackingList', JSON.stringify(appData));
-            renderList();
-        }
+            data.events.forEach(event => {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = `event ${event.type || ''}`;
 
-        function resetList() {
-            if(confirm('確定要重置所有清單嗎？您的勾選紀錄將會消失。')) {
-                localStorage.removeItem('japanPackingList');
-                location.reload(); // 重新整理頁面載入預設值
-            }
-        }
+                // 圓點
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                eventDiv.appendChild(dot);
 
-        // 初始化資料結構轉換（如果第一次執行）
-        appData.forEach(cat => {
-            cat.items = cat.items.map(item => {
-                return typeof item === 'string' ? { name: item, checked: false } : item;
+                // 卡片內容
+                let tagsHtml = '';
+                if(event.tags) {
+                    tagsHtml = `<div class="tags">${event.tags.map(t => `<span class="tag jr">${t}</span>`).join('')}</div>`;
+                }
+
+                let mapBtnHtml = '';
+                if(event.map) {
+                    mapBtnHtml = `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.map)}" target="_blank" class="map-btn"><i class="fas fa-map-marker-alt"></i> 導航至 ${event.map}</a>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="card-title">${event.title}</span>
+                        <span class="card-time">${event.time}</span>
+                    </div>
+                    <div class="card-desc">${event.desc}</div>
+                    ${mapBtnHtml}
+                    ${tagsHtml}
+                `;
+                
+                eventDiv.appendChild(card);
+                container.appendChild(eventDiv);
             });
-        });
+            
+            // 每次切換回到頂部 (體驗較好)
+            // window.scrollTo(0, 0); 
+        }
 
-        renderList();
+        // 啟動
+        init();
+
     </script>
 </body>
 </html>
